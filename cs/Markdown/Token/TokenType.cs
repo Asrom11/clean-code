@@ -2,7 +2,15 @@
 
 public enum TokenType
 {
-    Header,
-    Italic,
+    Text,
     Strong,
+    Italic,
+    Header,
+    Link 
+}
+
+public enum TagState
+{
+    Open,
+    Close
 }

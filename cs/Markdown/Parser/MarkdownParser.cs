@@ -1,11 +1,65 @@
-﻿using Markdown.Parser.Interface;
+﻿using System.Text;
+using Markdown.Parser.Interface;
+using Markdown.Parser.TokenHandler;
+using Markdown.Parser.TokenHandler.Handlers;
 
 namespace Markdown.Parser;
 
 public class MarkdownParser : IMarkdownParser
 {
-    public IEnumerable<Token> Parse(string markdownText)
+    private readonly IList<ITokenHandler> handlers;
+
+    public MarkdownParser()
     {
-        throw new NotImplementedException();
+        handlers = TokenHandlerFactory.CreateHandlers();
+    }
+
+    public IEnumerable<Token> Parse(string text)
+    {
+        var tokens = new List<Token>();
+        var openTags = new Stack<TokenType>();
+        var textBuffer = new StringBuilder();
+        var textStart = 0;
+        var position = 0;
+
+        while (position < text.Length)
+        {
+            var context = new ParsingContext(text, position, openTags);
+            var handled = false;
+
+            foreach (var handler in handlers)
+            {
+                if (!handler.TryHandle(context, out var token, out var skip))
+                {
+                    continue;
+                }
+                
+                if (textBuffer.Length > 0)
+                {
+                    tokens.Add(Token.CreateText(textBuffer.ToString(), textStart));
+                    textBuffer.Clear();
+                }
+
+                tokens.Add(token);
+                position += skip;
+                handled = true;
+                break;
+            }
+
+            if (handled)
+            {
+                continue;
+            }
+            
+            if (textBuffer.Length == 0)
+                textStart = position;
+            textBuffer.Append(text[position]);
+            position++;
+        }
+
+        if (textBuffer.Length > 0)
+            tokens.Add(Token.CreateText(textBuffer.ToString(), textStart));
+
+        return tokens;
     }
 }
