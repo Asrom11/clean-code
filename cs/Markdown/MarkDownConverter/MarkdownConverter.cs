@@ -1,109 +1,61 @@
 ﻿using System.Text;
 using Markdown.interfaces;
+using Markdown.MarkDownConverter.TagConverters;
+using Markdown.Token;
 
-namespace Markdown
+namespace Markdown.MarkDownConverter;
+
+public class MarkdownConverter : IMarkdownConverter
 {
-    public class MarkdownConverter : IMarkdownConverter
+    private readonly IList<ITagConverter> tagConverters;
+
+    public MarkdownConverter()
     {
-        public string Convert(IEnumerable<Token> tokens)
+        tagConverters = new List<ITagConverter>
         {
-            var result = new StringBuilder();
-            var tagStack = new Stack<TokenType>();
+            new TextConverter(),
+            new StrongConverter(),
+            new ItalicConverter(),
+            new HeaderConverter(),
+            new LinkConverter()
+        };
+    }
 
-            foreach (var token in tokens)
-            {
-                switch (token.Type)
-                {
-                    case TokenType.Text:
-                        result.Append(System.Net.WebUtility.HtmlEncode(token.Text));
-                        break;
+    public string Convert(IEnumerable<Token.Token> tokens)
+    {
+        var result = new StringBuilder();
+        var tagStack = new Stack<TokenType>();
 
-                    case TokenType.Strong:
-                    case TokenType.Italic:
-                        HandleFormattingTag(token, tagStack, result);
-                        break;
-
-                    case TokenType.Header:
-                        HandleHeaderTag(token, tagStack, result);
-                        break;
-                    case TokenType.Link:
-                        HandleLinkToken(token, result);
-                        break;
-                }
-            }
-            
-            while (tagStack.Count > 0)
-            {
-                var openTag = tagStack.Pop();
-                result.Append(GetClosingTag(openTag));
-            }
-
-            return result.ToString();
-        }
-        
-        private void HandleLinkToken(Token token, StringBuilder result)
+        foreach (var token in tokens)
         {
-            result.Append($"<a href=\"{token.Url}\">{token.Text}</a>");
-        }
-        
-        private void HandleFormattingTag(Token token, Stack<TokenType> tagStack, StringBuilder result)
-        {
-            if (token.State == TagState.Open)
+            var converter = tagConverters.FirstOrDefault(c => c.CanHandle(token.Type));
+            if (converter != null)
             {
-                result.Append(GetOpeningTag(token.Type));
-                tagStack.Push(token.Type);
+                converter.Handle(token, tagStack, result);
             }
-            else 
+            else
             {
-                if (tagStack.Count > 0 && tagStack.Peek() == token.Type)
-                {
-                    result.Append(GetClosingTag(token.Type));
-                    tagStack.Pop();
-                }
-                else
-                {
-                    result.Append(System.Net.WebUtility.HtmlEncode(token.Text));
-                }
+                result.Append(System.Net.WebUtility.HtmlEncode(token.Text));
             }
         }
 
-        private void HandleHeaderTag(Token token, Stack<TokenType> tagStack, StringBuilder result)
+        while (tagStack.Count > 0)
         {
-            if (token.State == TagState.Open)
-            {
-                result.Append($"<h{token.Level}>");
-                tagStack.Push(TokenType.Header);
-                return;
-            }
-
-            if (tagStack.Count > 0 && tagStack.Peek() == TokenType.Header)
-            {
-                result.Append($"</h{token.Level}>");
-                tagStack.Pop();
-                return;
-            }
-
-            result.Append(System.Net.WebUtility.HtmlEncode(token.Text));
+            var openTag = tagStack.Pop();
+            result.Append(GetClosingTag(openTag));
         }
 
-        private string GetOpeningTag(TokenType type)
-        {
-            return type switch
-            {
-                TokenType.Strong => "<strong>",
-                TokenType.Italic => "<em>",
-                _ => string.Empty
-            };
-        }
+        return result.ToString();
+    }
 
-        private string GetClosingTag(TokenType type)
+    private string GetClosingTag(TokenType type)
+    {
+        return type switch
         {
-            return type switch
-            {
-                TokenType.Strong => "</strong>",
-                TokenType.Italic => "</em>",
-                _ => string.Empty
-            };
-        }
+            TokenType.Strong => "</strong>",
+            TokenType.Italic => "</em>",
+            TokenType.Header => "</h1>",
+            _ => string.Empty
+        };
     }
 }

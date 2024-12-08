@@ -1,4 +1,6 @@
-﻿namespace Markdown.Parser.TokenHandler;
+﻿using Markdown.Parser.TokenHandler;
+
+namespace Markdown.Token;
 
 public class ParsingContext
 {

@@ -1,4 +1,4 @@
-﻿namespace Markdown;
+﻿namespace Markdown.Token;
 
 public enum TokenType
 {
@@ -6,11 +6,6 @@ public enum TokenType
     Strong,
     Italic,
     Header,
-    Link 
-}
-
-public enum TagState
-{
-    Open,
-    Close
+    Link,
+    Escaped
 }

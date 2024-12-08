@@ -1,4 +1,7 @@
-﻿namespace Markdown.Parser.TokenHandler;
+﻿using Markdown.Parser.Interface;
+using Markdown.Token;
+
+namespace Markdown.Parser.TokenHandler.Handlers;
 
 public abstract class BaseTokenHandler : ITokenHandler
 {
@@ -9,7 +12,7 @@ public abstract class BaseTokenHandler : ITokenHandler
         Delimiter = delimiter;
     }
 
-    public abstract bool TryHandle(ParsingContext context, out Token token, out int skip);
+    public abstract bool TryHandle(ParsingContext context, out Token.Token token, out int skip);
 
     protected bool IsMatch(string text, int position, string pattern)
     {

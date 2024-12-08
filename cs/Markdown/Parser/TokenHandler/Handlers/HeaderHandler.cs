@@ -1,4 +1,6 @@
-﻿namespace Markdown.Parser.TokenHandler.Handlers;
+﻿using Markdown.Token;
+
+namespace Markdown.Parser.TokenHandler.Handlers;
 
 public class HeaderHandler : BaseTokenHandler
 {
@@ -6,7 +8,7 @@ public class HeaderHandler : BaseTokenHandler
     {
     }
 
-    public override bool TryHandle(ParsingContext context, out Token token, out int skip)
+    public override bool TryHandle(ParsingContext context, out Token.Token token, out int skip)
     {
         token = null;
         skip = 0;
@@ -15,20 +17,20 @@ public class HeaderHandler : BaseTokenHandler
             return false;
 
         var level = 1;
-        var pos = context.Position + 1;
+        var position = context.Position + 1;
 
-        while (pos < context.Text.Length && context.Text[pos] == '#' && level < 6)
+        while (position < context.Text.Length && context.Text[position] == '#' && level < 6)
         {
             level++;
-            pos++;
+            position++;
         }
 
-        if (pos >= context.Text.Length || context.Text[pos] != ' ')
+        if (position >= context.Text.Length || context.Text[position] != ' ')
             return false;
         
         context.OpenTags.Push(Delimiter.Type);
 
-        token = new Token(
+        token = new Token.Token(
             new string('#', level),
             TokenType.Header,
             TagState.Open,

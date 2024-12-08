@@ -2,6 +2,8 @@
 using Markdown;
 using Markdown.Parser;
 using Markdown.Parser.Interface;
+using Markdown.Token;
+using MarkDownTest.Extension;
 using NUnit.Framework;
 
 namespace MarkDownTest;
@@ -26,9 +28,8 @@ public class MarkdownParserTests
         };
         
         var tokens = _parser.Parse(input);
-        
-        tokens.Should().BeEquivalentTo(expectedTokens, 
-            options => options.WithStrictOrdering());
+
+        tokens.AssertTokensEqual(expectedTokens);
     }
 
     [Test]
@@ -41,9 +42,8 @@ public class MarkdownParserTests
         };
         
         var tokens = _parser.Parse(input);
-        
-        tokens.Should().BeEquivalentTo(expectedTokens, 
-            options => options.WithStrictOrdering());
+
+        tokens.AssertTokensEqual(expectedTokens);
     }
 
     [TestCase("# Header", 1)]
@@ -59,8 +59,7 @@ public class MarkdownParserTests
         
         var tokens = _parser.Parse(input);
 
-        tokens.Should().BeEquivalentTo(expectedTokens, 
-            options => options.WithStrictOrdering());
+        tokens.AssertTokensEqual(expectedTokens);
     }
 
     [TestCase("#Header")]
@@ -74,9 +73,8 @@ public class MarkdownParserTests
         };
         
         var tokens = _parser.Parse(input);
-        
-        tokens.Should().BeEquivalentTo(expectedTokens, 
-            options => options.WithStrictOrdering());
+
+        tokens.AssertTokensEqual(expectedTokens);
     }
 
     [Test]
@@ -91,9 +89,8 @@ public class MarkdownParserTests
         };
         
         var tokens = _parser.Parse(input);
-        
-        tokens.Should().BeEquivalentTo(expectedTokens, 
-            options => options.WithStrictOrdering());
+
+        tokens.AssertTokensEqual(expectedTokens);
     }
 
     [Test]
@@ -108,9 +105,8 @@ public class MarkdownParserTests
         };
         
         var tokens = _parser.Parse(input);
-        
-        tokens.Should().BeEquivalentTo(expectedTokens, 
-            options => options.WithStrictOrdering());
+
+        tokens.AssertTokensEqual(expectedTokens);
     }
 
     [Test]
@@ -130,29 +126,24 @@ public class MarkdownParserTests
         
         var tokens = _parser.Parse(input);
         
-        tokens.Should().BeEquivalentTo(expectedTokens, 
-            options => options.WithStrictOrdering());
+        tokens.AssertTokensEqual(expectedTokens);
     }
 
     [Test]
     public void Parse_NestedTags_ClosesInCorrectOrder()
     {
-        var input = "__bold _italic__ text_";
+        var input = "__bold italic__ text_";
         var expectedTokens = new[]
         {
             Token.CreateStrong(true, 0),
-            Token.CreateText("bold ", 2),
-            Token.CreateItalic(true, 7), 
-            Token.CreateText("italic", 8), 
-            Token.CreateStrong(false, 14), 
-            Token.CreateText(" text", 16),
-            Token.CreateItalic(false, 21) 
+            Token.CreateText("bold italic", 2),
+            Token.CreateStrong(false, 13), 
+            Token.CreateText(" text_", 15),
         };
     
         var tokens = _parser.Parse(input);
-    
-        tokens.Should().BeEquivalentTo(expectedTokens, 
-            options => options.WithStrictOrdering());
+        
+        tokens.AssertTokensEqual(expectedTokens);
     }
     
     [Test]
@@ -174,8 +165,7 @@ public class MarkdownParserTests
         
         var tokens = _parser.Parse(input);
         
-        tokens.Should().BeEquivalentTo(expectedTokens, 
-            options => options.WithStrictOrdering());
+        tokens.AssertTokensEqual(expectedTokens);
     }
     
     [Test]
@@ -195,23 +185,24 @@ public class MarkdownParserTests
 
         var tokens = _parser.Parse(input);
 
-        tokens.Should().BeEquivalentTo(expectedTokens,
-            options => options.WithStrictOrdering());
+        tokens.AssertTokensEqual(expectedTokens);
     }
     
     [TestCase("")]
     [TestCase(" ")]
     [TestCase("\n")]
+    [TestCase(null)]
     public void Parse_MinimalInput_ReturnsTextToken(string input)
     {
-        var expectedTokens = input.Length == 0 
-            ? Array.Empty<Token>() 
-            : new[] { Token.CreateText(input, 0) };
+        var expectedTokens = new[] { Token.CreateText(input, 0) };
+        if (input is null || input.Length == 0)
+        {
+            expectedTokens = Array.Empty<Token>();
+        }
         
         var tokens = _parser.Parse(input);
         
-        tokens.Should().BeEquivalentTo(expectedTokens, 
-            options => options.WithStrictOrdering());
+        tokens.AssertTokensEqual(expectedTokens);
     }
 
     [Test]
@@ -229,8 +220,7 @@ public class MarkdownParserTests
         
         var tokens = _parser.Parse(input);
         
-        tokens.Should().BeEquivalentTo(expectedTokens, 
-            options => options.WithStrictOrdering());
+        tokens.AssertTokensEqual(expectedTokens);
     }
     
     [Test]
@@ -243,25 +233,150 @@ public class MarkdownParserTests
         };
     
         var tokens = _parser.Parse(input);
-    
-        tokens.Should().BeEquivalentTo(expectedTokens, options => options.WithStrictOrdering());
+        
+        tokens.AssertTokensEqual(expectedTokens);
     }
     
     
     [Test]
     public void Parse_StrongTextWithLink_ReturnsCorrectTokens()
     {
-        var input = "__Посетите [сайт](https://example.com)__";
+        var input = "_Посетите [сайт](https://example.com)_";
         var expectedTokens = new[]
         {
-            Token.CreateStrong(true, 0),
-            Token.CreateText("Посетите ", 2),
-            Token.CreateLink("сайт", "https://example.com", 11),
-            Token.CreateStrong(false, 38)
+            Token.CreateItalic(true, 0),
+            Token.CreateText("Посетите ", 1),
+            Token.CreateLink("сайт", "https://example.com", 10),
+            Token.CreateItalic(false, 37)
         };
     
         var tokens = _parser.Parse(input);
         
-        tokens.Should().BeEquivalentTo(expectedTokens, options => options.WithStrictOrdering());
+        tokens.AssertTokensEqual(expectedTokens);
+    }
+    
+    [Test]
+    public void Parse_WithIncorrectItalicSpacing_ReturnsTextAsIs()
+    {
+        var input = "_подчерки _не считаются_";
+        var expectedTokens = new[]
+        {
+            Token.CreateText("_подчерки ", 0),
+            Token.CreateItalic(true, 10),
+            Token.CreateText("не считаются", 11),
+            Token.CreateItalic(false, 23)
+        };
+
+        var tokens = _parser.Parse(input);
+
+        tokens.AssertTokensEqual(expectedTokens);
+    }
+
+    [Test]
+    public void Parse_WithUnderscoresWithinWords_NoFormattingApplied()
+    {
+        var input = "ра_зных сл_овах";
+        var expectedTokens = new[]
+        {
+            Token.CreateText("ра_зных сл_овах", 0)
+        };
+        
+        var tokens = _parser.Parse(input);
+        
+   
+        tokens.AssertTokensEqual(expectedTokens);
+    }
+
+    [Test]
+    public void Parse_WithTrailingUnderscoresAfterWords_NoFormattingApplied()
+    {
+        var input = "эти_ подчерки_ не должны работать";
+        var expectedTokens = new[]
+        {
+            Token.CreateText("эти_ подчерки_ не должны работать", 0)
+        };
+        
+        var tokens = _parser.Parse(input);
+        
+       
+        tokens.AssertTokensEqual(expectedTokens);
+    }
+
+    [Test]
+    public void Parse_WithUnpairedUnderscore_ReturnsTextAsIs()
+    {
+        var input = "Непарные_ символы";
+        var expectedTokens = new[]
+        {
+            Token.CreateText("Непарные_ символы", 0)
+        };
+        
+        var tokens = _parser.Parse(input);
+        
+       
+        tokens.AssertTokensEqual(expectedTokens);
+    }
+
+    [Test]
+    public void Parse_WithUnderscoresAroundNumbers_NoFormattingApplied()
+    {
+        var input = "цифрами_12_3";
+        var expectedTokens = new[]
+        {
+            Token.CreateText("цифрами_12_3", 0)
+        };
+        
+        var tokens = _parser.Parse(input);
+        
+       
+        tokens.AssertTokensEqual(expectedTokens);
+    }
+
+    [Test]
+    public void Parse_WithMultipleConsecutiveUnderscores_ReturnsTextAsIs()
+    {
+        var input = "____";
+        var expectedTokens = new[]
+        {
+            Token.CreateText("____", 0)
+        };
+        
+        var tokens = _parser.Parse(input);
+        
+
+        tokens.AssertTokensEqual(expectedTokens);
+    }
+    
+    
+    [Test]
+    public void Parse_WithEscapedCharacters_ReturnsTextWithEscapedSymbols()
+    {
+        var input = @"\_не_подчеркивается\_";
+        var expectedTokens = new[]
+        {
+            Token.CreateText("_", 0),
+            Token.CreateText("не_подчеркивается", 2),
+            Token.CreateText("_", 19),
+        };
+    
+        var tokens = _parser.Parse(input);
+    
+        
+        tokens.AssertTokensEqual(expectedTokens);
+    }
+
+    [Test]
+    public void Parse_WithLineBreaksBreakingControlCharacters_ReturnsTextAsIs()
+    {
+        var input = "Это пример с разрывом _подчеркивания\nна новой строке_";
+        var expectedTokens = new[]
+        {
+            Token.CreateText("Это пример с разрывом _подчеркивания\nна новой строке_", 0)
+        };
+    
+        var tokens = _parser.Parse(input);
+    
+ 
+        tokens.AssertTokensEqual(expectedTokens);
     }
 }

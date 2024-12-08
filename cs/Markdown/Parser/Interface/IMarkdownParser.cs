@@ -2,5 +2,5 @@
 
 public interface IMarkdownParser
 {
-    IEnumerable<Token> Parse(string markdownText);
+    IEnumerable<Token.Token> Parse(string markdownText);
 }

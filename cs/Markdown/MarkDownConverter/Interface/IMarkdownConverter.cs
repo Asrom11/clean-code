@@ -2,5 +2,5 @@
 
 public interface IMarkdownConverter
 {
-    string Convert(IEnumerable<Token> tokens);
+    string Convert(IEnumerable<Token.Token> tokens);
 }

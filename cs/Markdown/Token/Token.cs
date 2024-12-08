@@ -1,4 +1,6 @@
-﻿using Markdown;
+﻿using Markdown.Parser.TokenHandler;
+
+namespace Markdown.Token;
 
 public class Token
 {

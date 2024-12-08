@@ -1,7 +1,9 @@
-﻿using System.Text;
+﻿
+
+using System.Text;
 using Markdown.Parser.Interface;
 using Markdown.Parser.TokenHandler;
-using Markdown.Parser.TokenHandler.Handlers;
+using Markdown.Token;
 
 namespace Markdown.Parser;
 
@@ -14,14 +16,19 @@ public class MarkdownParser : IMarkdownParser
         handlers = TokenHandlerFactory.CreateHandlers();
     }
 
-    public IEnumerable<Token> Parse(string text)
+    public IEnumerable<Token.Token> Parse(string text)
     {
-        var tokens = new List<Token>();
+        var tokens = new List<Token.Token>();
         var openTags = new Stack<TokenType>();
         var textBuffer = new StringBuilder();
         var textStart = 0;
         var position = 0;
 
+        if (text is null)
+        {
+            return tokens;
+        }
+        
         while (position < text.Length)
         {
             var context = new ParsingContext(text, position, openTags);
@@ -36,7 +43,7 @@ public class MarkdownParser : IMarkdownParser
                 
                 if (textBuffer.Length > 0)
                 {
-                    tokens.Add(Token.CreateText(textBuffer.ToString(), textStart));
+                    tokens.Add(Token.Token.CreateText(textBuffer.ToString(), textStart));
                     textBuffer.Clear();
                 }
 
@@ -58,7 +65,7 @@ public class MarkdownParser : IMarkdownParser
         }
 
         if (textBuffer.Length > 0)
-            tokens.Add(Token.CreateText(textBuffer.ToString(), textStart));
+            tokens.Add(Token.Token.CreateText(textBuffer.ToString(), textStart));
 
         return tokens;
     }

@@ -1,6 +1,8 @@
 ﻿using FluentAssertions;
 using Markdown;
 using Markdown.interfaces;
+using Markdown.MarkDownConverter;
+using Markdown.Token;
 using NUnit.Framework;
 
 namespace MarkDownTest;

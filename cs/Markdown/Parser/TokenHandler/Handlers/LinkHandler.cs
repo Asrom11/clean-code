@@ -1,4 +1,6 @@
-﻿namespace Markdown.Parser.TokenHandler.Handlers;
+﻿using Markdown.Token;
+
+namespace Markdown.Parser.TokenHandler.Handlers;
 
 public class LinkHandler : BaseTokenHandler
 {
@@ -6,7 +8,7 @@ public class LinkHandler : BaseTokenHandler
     {
     }
 
-    public override bool TryHandle(ParsingContext context, out Token token, out int skip)
+    public override bool TryHandle(ParsingContext context, out Token.Token token, out int skip)
     {
         token = null;
         skip = 0;
@@ -20,15 +22,15 @@ public class LinkHandler : BaseTokenHandler
         if (closingBracketIndex == -1 || closingBracketIndex + 1 >= text.Length || text[closingBracketIndex + 1] != '(')
             return false;
 
-        var closingParenIndex = text.IndexOf(')', closingBracketIndex + 1);
-        if (closingParenIndex == -1)
+        var closingParentIndex = text.IndexOf(')', closingBracketIndex + 1);
+        if (closingParentIndex == -1)
             return false;
 
         var linkText = text.Substring(position + 1, closingBracketIndex - position - 1);
-        var url = text.Substring(closingBracketIndex + 2, closingParenIndex - closingBracketIndex - 2);
+        var url = text.Substring(closingBracketIndex + 2, closingParentIndex - closingBracketIndex - 2);
 
-        token = new Token(linkText, TokenType.Link, TagState.Open, position, url: url);
-        skip = closingParenIndex - position + 1;
+        token = new Token.Token(linkText, TokenType.Link, TagState.Open, position, url: url);
+        skip = closingParentIndex - position + 1;
 
         return true;
     }

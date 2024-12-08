@@ -1,4 +1,6 @@
-﻿namespace Markdown.Parser.TokenHandler;
+﻿using Markdown.Token;
+
+namespace Markdown.Parser.TokenHandler;
 
 public class Delimiter
 {

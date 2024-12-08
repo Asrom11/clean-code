@@ -1,6 +1,8 @@
-﻿namespace Markdown.Parser.TokenHandler;
+﻿using Markdown.Token;
+
+namespace Markdown.Parser.Interface;
 
 public interface ITokenHandler
 {
-    bool TryHandle(ParsingContext context, out Token token, out int skip);
+    bool TryHandle(ParsingContext context, out Token.Token token, out int skip);
 }
